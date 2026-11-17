@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071b13">
+<title>BIRDS — The Aviary</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+ --bg:#071810;--panel:#10271c;--panel2:#163426;--line:#284b38;--text:#edf7ef;
+ --muted:#9db6a5;--green:#79d69a;--lime:#c7f36b;--gold:#e7c879;--blue:#82c8ef;
+ --purple:#c4a0f4;--shadow:0 16px 42px #0005;
+}
+*{box-sizing:border-box}html{background:var(--bg)}body{margin:0;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:
+ radial-gradient(ellipse at 85% -10%,#24563a 0,transparent 42%),
+ radial-gradient(ellipse at -10% 35%,#123522 0,transparent 35%),var(--bg);min-height:100vh}
+button{font:inherit;cursor:pointer}button:focus-visible{outline:2px solid var(--lime);outline-offset:3px}
+.shell{max-width:520px;margin:auto;min-height:100vh;padding:18px 16px calc(100px + env(safe-area-inset-bottom))}
+.top{display:flex;align-items:center;justify-content:space-between;margin:3px 1px 18px}
+.brand{display:flex;align-items:center;gap:10px}.brandmark{width:40px;height:40px;border-radius:13px;background:linear-gradient(145deg,#b8ed78,#2d9a5c);display:grid;place-items:center;color:#092114;font-size:23px;box-shadow:0 6px 20px #72c97a35}
+.brandname{font-weight:950;letter-spacing:3px;font-size:20px}.eyebrow{font-size:10px;letter-spacing:1.7px;color:var(--muted);text-transform:uppercase}
+.avatar{width:38px;height:38px;border-radius:50%;border:1px solid #477454;background:#193d2b;display:grid;place-items:center;color:var(--lime);font-weight:800}
+.balance{position:relative;overflow:hidden;padding:19px;border:1px solid #3b7650;border-radius:22px;background:linear-gradient(115deg,#17442d,#10291d 68%,#1b4a31);box-shadow:var(--shadow)}
+.balance:after{content:"";position:absolute;width:170px;height:170px;border-radius:50%;border:1px solid #ffffff12;right:-42px;top:-75px;box-shadow:0 0 0 18px #ffffff08,0 0 0 38px #ffffff05}
+.balance-head{display:flex;justify-content:space-between;align-items:center;color:#c1d8c6;font-size:12px}
+.balance-num{font-size:35px;font-weight:900;letter-spacing:-1px;margin:8px 0 1px}.balance-foot{font-size:11px;color:#b1cbb8}
+.statrow{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:15px}
+.stat{padding:10px 9px;border-radius:13px;background:#071b134d;border:1px solid #ffffff13}.stat b{display:block;font-size:15px}.stat span{font-size:10px;color:#b2c9b8}
+.hero{margin-top:14px;border:1px solid #315b40;border-radius:23px;min-height:210px;padding:19px;position:relative;overflow:hidden;background:linear-gradient(135deg,#1a4930,#0d281b 70%)}
+.hero:before{content:"";position:absolute;width:240px;height:240px;border-radius:50%;right:-65px;top:-90px;background:radial-gradient(circle,#a9e76d26,transparent 68%)}
+.hero-content{position:relative;z-index:1;max-width:65%}.tag{display:inline-flex;gap:6px;align-items:center;border:1px solid #6aa77a66;color:#c9efb4;background:#ffffff0b;padding:5px 9px;border-radius:30px;font-size:10px;text-transform:uppercase;letter-spacing:1px}
+.hero h1{font-size:25px;line-height:1.1;margin:13px 0 7px;letter-spacing:-.6px}.hero p{font-size:12px;color:#b4cdbb;line-height:1.5;margin:0 0 15px}
+.hero-bird{position:absolute;right:13px;bottom:7px;font-size:105px;filter:drop-shadow(0 14px 13px #0008);transform:rotate(-7deg)}
+.primary{border:0;border-radius:12px;padding:12px 15px;background:linear-gradient(100deg,var(--lime),#7bd98e);color:#102417;font-weight:900;font-size:13px;box-shadow:0 5px 0 #438d50}
+.primary:active{transform:translateY(2px);box-shadow:0 3px 0 #438d50}
+.section-head{display:flex;align-items:end;justify-content:space-between;margin:22px 2px 11px}.section-head h2{font-size:16px;margin:0}.section-head span{font-size:11px;color:var(--muted)}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.quick button{border:1px solid var(--line);background:linear-gradient(150deg,#173927,#10271c);border-radius:15px;color:var(--text);padding:12px 4px 10px;font-size:10px;font-weight:750}
+.quick i{display:block;font-style:normal;font-size:23px;margin-bottom:6px}
+.panel{background:linear-gradient(145deg,#122d20,#0d2118);border:1px solid var(--line);border-radius:18px;padding:15px;margin-top:10px}
+.panel-title{font-weight:850;font-size:14px}.muted{color:var(--muted);font-size:11px;line-height:1.5}
+.progress{height:7px;border-radius:9px;background:#294333;overflow:hidden;margin-top:10px}.progress>i{display:block;height:100%;width:62%;background:linear-gradient(90deg,#70c98a,#c7f36b);border-radius:9px}
+.page{display:none}.page.active{display:block}.page-title{font-size:23px;font-weight:900;margin:10px 0 5px}.page-sub{font-size:12px;color:var(--muted);margin-bottom:16px}
+.birdgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.birdcard{border:1px solid var(--line);border-radius:17px;background:linear-gradient(150deg,#173927,#0e2419);padding:13px;position:relative;overflow:hidden}
+.birdcard .art{height:92px;display:grid;place-items:center;font-size:64px;background:radial-gradient(circle,#ffffff12,transparent 65%);margin-bottom:8px}
+.rarity{font-size:9px;text-transform:uppercase;letter-spacing:1.2px;font-weight:900}.common{color:#a9d7a9}.rare{color:var(--blue)}.epic{color:var(--purple)}.legendary{color:var(--gold)}
+.birdcard h3{font-size:13px;margin:5px 0}.birdcard p{font-size:10px;color:var(--muted);margin:0}.birdcard .power{font-size:11px;margin-top:9px;color:#d8ebdc}
+.eggbox{padding:18px;text-align:center;border:1px solid #496d43;background:radial-gradient(circle at 50% 0,#3c7040,#132d20 70%);border-radius:20px}
+.egg{font-size:90px;filter:drop-shadow(0 10px 12px #0007);margin:5px}.eggbox h3{margin:0 0 5px}.odds{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin:15px 0}.odds div{background:#071b1377;padding:8px 3px;border-radius:9px;font-size:10px}.odds b{display:block;font-size:12px;margin-bottom:3px}
+.action{border:1px solid #46734f;background:#1a422d;color:#dff5df;border-radius:11px;padding:11px 13px;font-size:12px;font-weight:800}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.mission{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid #294334}.mission:last-child{border:0}.missionicon{width:39px;height:39px;border-radius:12px;background:#1e432d;display:grid;place-items:center;font-size:19px}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);display:grid;grid-template-columns:repeat(5,1fr);gap:3px;padding:9px 8px calc(9px + env(safe-area-inset-bottom));background:#091b13ed;backdrop-filter:blur(18px);border-top:1px solid #31533d;z-index:5}
+.nav button{border:0;background:transparent;color:#8da895;border-radius:12px;padding:6px 2px;font-size:9px;font-weight:700}.nav button span{display:block;font-size:19px;margin-bottom:3px}.nav button.active{color:var(--lime);background:#1d3d2b}
+.toast{position:fixed;z-index:10;left:50%;bottom:90px;transform:translateX(-50%);background:#e7f7e8;color:#102417;border-radius:30px;padding:10px 16px;font-size:12px;font-weight:800;display:none;white-space:nowrap;box-shadow:var(--shadow)}
+.disclaimer{text-align:center;color:#718d79;font-size:9px;line-height:1.5;margin:17px 8px}
+@media(min-width:480px){.shell{padding-top:24px}.hero{min-height:225px}}
+</style>
+</head>
+<body>
+<div class="shell">
+ <header class="top">
+  <div class="brand"><div class="brandmark">♧</div><div><div class="brandname">BIRDS</div><div class="eyebrow">The Aviary · Season 01</div></div></div>
+  <div class="avatar" id="avatar">B</div>
+ </header>
+
+ <main>
+  <section class="page active" id="home">
+   <div class="balance">
+    <div class="balance-head"><span>AVAILABLE POINTS</span><span>● LIVE FARM</span></div>
+    <div class="balance-num" id="points">1,000</div><div class="balance-foot">Virtual game points · no cash value at this stage</div>
+    <div class="statrow">
+     <div class="stat"><b id="birdCount">1</b><span>Birds owned</span></div>
+     <div class="stat"><b>Lv. 01</b><span>Farm level</span></div>
+     <div class="stat"><b id="streak">1 day</b><span>Login streak</span></div>
+    </div>
+   </div>
+   <div class="hero">
+    <div class="hero-content"><span class="tag">✦ YOUR AVIARY</span><h1>Build a flock<br>worth collecting.</h1><p>Discover rare species, grow your farm and build your collection one bird at a time.</p><button class="primary" id="tap">COLLECT +1 POINT</button></div>
+    <div class="hero-bird">🐦</div>
+   </div>
+   <div class="section-head"><h2>Explore the aviary</h2><span>YOUR NEXT MOVE</span></div>
+   <div class="quick">
+    <button data-page="birds"><i>🪶</i>My birds</button>
+    <button data-page="eggs"><i>🥚</i>Hatch egg</button>
+    <button data-page="missions"><i>✦</i>Missions</button>
+    <button data-page="friends"><i>♧</i>Invite</button>
+   </div>
+   <div class="section-head"><h2>Farm progress</h2><span>LEVEL 1</span></div>
+   <div class="panel"><div class="row"><div><div class="panel-title">Young Aviary</div><div class="muted">Keep collecting to grow your farm.</div></div><strong style="color:var(--lime)">620 / 1,000 XP</strong></div><div class="progress"><i></i></div></div>
+  </section>
+
+  <section class="page" id="birds">
+   <div class="page-title">My collection</div><div class="page-sub">Four rarity tiers. Every bird has a role in your growing aviary.</div>
+   <div class="birdgrid" id="collection">
+    <article class="birdcard"><div class="art">🐦</div><div class="rarity common">● Common</div><h3>Meadow Finch</h3><p>A reliable companion for every new keeper.</p><div class="power">Earning power · 1×</div></article>
+    <article class="birdcard"><div class="art">🦜</div><div class="rarity rare">● Rare</div><h3>Azure Parakeet</h3><p>A sought-after colour in the aviary.</p><div class="power">Earning power · 3×</div></article>
+    <article class="birdcard"><div class="art">🦚</div><div class="rarity epic">● Epic</div><h3>Mooncrest</h3><p>An exceptional bird with a striking plume.</p><div class="power">Earning power · 8×</div></article>
+    <article class="birdcard"><div class="art">🦅</div><div class="rarity legendary">● Legendary</div><h3>Solstice Crown</h3><p>The rarest sight in the BIRDS world.</p><div class="power">Earning power · 20×</div></article>
+   </div>
+   <div class="panel muted">Collection cards are currently illustrative. Your real owned birds will be loaded from the game server once the backend is connected.</div>
+  </section>
+
+  <section class="page" id="eggs">
+   <div class="page-title">The hatchery</div><div class="page-sub">Every egg holds a possibility. Hatch carefully and grow your flock.</div>
+   <div class="eggbox"><div class="tag">STARTER EGG</div><div class="egg">🥚</div><h3>Woodland Egg</h3><p class="muted">A first step into the BIRDS collection.</p><h2 style="color:var(--lime);margin:12px 0">100 points</h2><button class="primary" id="hatch">HATCH EGG · 100 PTS</button>
+    <div class="odds"><div><b class="common">60%</b>Common</div><div><b class="rare">25%</b>Rare</div><div><b class="epic">12%</b>Epic</div><div><b class="legendary">3%</b>Legendary</div></div>
+   </div>
+   <p class="disclaimer">Hatching is a demo preview. Final odds, pricing and outcomes must be enforced by a secure server before public release.</p>
+  </section>
+
+  <section class="page" id="market">
+   <div class="page-title">Bird exchange</div><div class="page-sub">A future home for player-to-player collecting.</div>
+   <div class="panel"><div style="font-size:34px">🛒</div><h3>Marketplace coming soon</h3><p class="muted">We'll add secure listings, ownership checks, trade confirmation and transaction history after the game accounts are stored on a backend.</p><button class="action" id="marketInfo">Why is it locked?</button></div>
+  </section>
+
+  <section class="page" id="friends">
+   <div class="page-title">Grow your circle</div><div class="page-sub">Invite real friends and build the BIRDS community together.</div>
+   <div class="panel"><div class="eyebrow">REFERRAL REWARD · PLANNED</div><div style="font-size:31px;font-weight:900;color:var(--lime);margin:7px 0">$0.01</div><div class="muted">Equivalent in virtual points per qualified referral. Not cash and not withdrawable.</div><div class="progress"><i style="width:0%"></i></div><div class="row" style="margin-top:12px"><span class="muted">Successful referrals</span><b id="refCount">0</b></div><button class="primary" style="width:100%;margin-top:15px" id="invite">INVITE FRIENDS</button></div>
+   <div class="panel"><div class="panel-title">How a referral qualifies</div><p class="muted">A new player must join through your unique Telegram link and complete the qualifying activity. Server-side checks will prevent duplicate, self and automated referrals.</p></div>
+  </section>
+
+  <section class="page" id="missions">
+   <div class="page-title">Daily missions</div><div class="page-sub">Small actions. Steady progress.</div>
+   <div class="panel">
+    <div class="mission"><div class="missionicon">🌱</div><div style="flex:1"><b>Visit your aviary</b><div class="muted">Open the game today</div></div><b style="color:var(--lime)">+10</b></div>
+    <div class="mission"><div class="missionicon">🪶</div><div style="flex:1"><b>Collect points</b><div class="muted">Tap the collection button</div></div><b style="color:var(--lime)">+5</b></div>
+    <div class="mission"><div class="missionicon">👥</div><div style="flex:1"><b>Invite a new keeper</b><div class="muted">Qualified referrals only</div></div><b style="color:var(--lime)">+100</b></div>
+   </div>
+  </section>
+ </main>
+ <p class="disclaimer">BIRDS is a prototype. Points shown here are demo data stored on this device. They are not money, a token, or a promise of future value.</p>
+</div>
+<nav class="nav">
+ <button class="active" data-page="home"><span>⌂</span>HOME</button>
+ <button data-page="birds"><span>🪶</span>BIRDS</button>
+ <button data-page="eggs"><span>🥚</span>HATCH</button>
+ <button data-page="market"><span>▦</span>MARKET</button>
+ <button data-page="friends"><span>♧</span>FRIENDS</button>
+</nav>
+<div class="toast" id="toast"></div>
+<script>
+const tg=window.Telegram?.WebApp;
+if(tg){tg.ready();tg.expand();const user=tg.initDataUnsafe?.user;if(user){document.getElementById('avatar').textContent=(user.first_name||'B').slice(0,1).toUpperCase();}}
+let points=Number(localStorage.getItem('birds_demo_points')||1000);
+let refs=Number(localStorage.getItem('birds_demo_refs')||0);
+const pointEl=document.getElementById('points');
+function render(){pointEl.textContent=points.toLocaleString();document.getElementById('refCount').textContent=refs;}
+function notify(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>el.style.display='none',2100);}
+function changePage(id){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));window.scrollTo({top:0,behavior:'smooth'});}
+document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>changePage(b.dataset.page)));
+document.getElementById('tap').addEventListener('click',()=>{points+=1;localStorage.setItem('birds_demo_points',points);render();tg?.HapticFeedback?.impactOccurred('light');notify('+1 demo point collected');});
+document.getElementById('hatch').addEventListener('click',()=>{if(points<100){notify('You need 100 points to hatch an egg');return;}points-=100;localStorage.setItem('birds_demo_points',points);render();notify('Hatching will be enabled with the secure game server');});
+document.getElementById('invite').addEventListener('click',()=>{if(tg?.openTelegramLink){tg.openTelegramLink('https://t.me/share/url?url=https://t.me/Cas_BirdsFarmBot&text=Join%20me%20in%20BIRDS!');}else{notify('Open BIRDS inside Telegram to share an invite');}});
+document.getElementById('marketInfo').addEventListener('click',()=>notify('Marketplace unlocks after secure player accounts are ready'));
+render();
+</script>
+</body>
+</html>
