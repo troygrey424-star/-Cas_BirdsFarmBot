@@ -1,215 +1,39 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { withSupabase } from "npm:@supabase/server@^1";
-
-const encoder = new TextEncoder();
-
-function hex(buffer: ArrayBuffer): string {
-  return Array.from(new Uint8Array(buffer))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-async function verifyTelegram(
-  initData: string,
-  botToken: string
-) {
-  const params = new URLSearchParams(initData);
-
-  const receivedHash = params.get("hash");
-
-  if (!receivedHash) return null;
-
-  params.delete("hash");
-
-  const authDate = Number(params.get("auth_date"));
-  const now = Math.floor(Date.now() / 1000);
-
-  if (
-    !Number.isFinite(authDate) ||
-    authDate <= 0 ||
-    now - authDate > 3600 ||
-    authDate - now > 60
-  ) {
-    return null;
-  }
-
-  const checkString = Array.from(params.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, value]) => `${key}=${value}`)
-    .join("\n");
-
-  const botKey = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(botToken),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-
-  const secret = await crypto.subtle.sign(
-    "HMAC",
-    botKey,
-    encoder.encode("WebAppData")
-  );
-
-  const dataKey = await crypto.subtle.importKey(
-    "raw",
-    secret,
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-
-  const calculatedHash = hex(
-    await crypto.subtle.sign(
-      "HMAC",
-      dataKey,
-      encoder.encode(checkString)
-    )
-  );
-
-  if (calculatedHash.length !== receivedHash.length) {
-    return null;
-  }
-
-  let difference = 0;
-
-  for (let i = 0; i < calculatedHash.length; i++) {
-    difference |=
-      calculatedHash.charCodeAt(i) ^
-      receivedHash.charCodeAt(i);
-  }
-
-  if (difference !== 0) return null;
-
-  const userData = params.get("user");
-
-  if (!userData) return null;
-
-  try {
-    return JSON.parse(userData);
-  } catch {
-    return null;
-  }
-}
-
-export default {
-  fetch: withSupabase(
-    { auth: "none" },
-    async (req, ctx) => {
-
-      if (req.method !== "POST") {
-        return Response.json(
-          { error: "POST required" },
-          { status: 405 }
-        );
-      }
-
-      try {
-        const botToken = Deno.env.get(
-          "TELEGRAM_BOT_TOKEN"
-        );
-
-        if (!botToken) {
-          return Response.json(
-            { error: "Bot token is not configured" },
-            { status: 500 }
-          );
-        }
-
-        const body = await req.json();
-
-        const initData = body?.initData;
-
-        if (
-          typeof initData !== "string" ||
-          initData.length === 0 ||
-          initData.length > 10000
-        ) {
-          return Response.json(
-            { error: "Invalid Telegram data" },
-            { status: 400 }
-          );
-        }
-
-        const user = await verifyTelegram(
-          initData,
-          botToken
-        );
-
-        if (
-          !user ||
-          !user.id ||
-          !Number.isSafeInteger(user.id)
-        ) {
-          return Response.json(
-            { error: "Telegram verification failed" },
-            { status: 401 }
-          );
-        }
-
-        const { error: insertError } =
-          await ctx.supabaseAdmin
-            .from("player_profiles")
-            .upsert(
-              {
-                telegram_id: user.id,
-                username: user.username ?? null,
-                display_name: [
-                  user.first_name,
-                  user.last_name
-                ]
-                  .filter(Boolean)
-                  .join(" "),
-                points: 1000
-              },
-              {
-                onConflict: "telegram_id",
-                ignoreDuplicates: true
-              }
-            );
-
-        if (insertError) {
-          console.error(insertError);
-
-          return Response.json(
-            { error: "Could not register player" },
-            { status: 500 }
-          );
-        }
-
-        const { data: player, error: fetchError } =
-          await ctx.supabaseAdmin
-            .from("player_profiles")
-            .select(
-              "telegram_id, username, display_name, points"
-            )
-            .eq("telegram_id", user.id)
-            .single();
-
-        if (fetchError) {
-          console.error(fetchError);
-
-          return Response.json(
-            { error: "Could not load player profile" },
-            { status: 500 }
-          );
-        }
-
-        return Response.json({
-          success: true,
-          message: "Welcome to BIRDS!",
-          player
-        });
-
-      } catch (error) {
-        console.error(error);
-
-        return Response.json(
-          { error: "Server error" },
-          { status: 500 }
-        );
-      }
-    }
-  )
-};
+<div class="panel"><div class="eyebrow">REFERRAL REWARD · PLANNED</div><div style="font-size:31px;font-weight:900;color:var(--lime);margin:7px 0">$0.01</div><div class="muted">Equivalent in virtual points per qualified referral. Not cash and not withdrawable.</div><div class="progress"><i style="width:0%"></i></div><div class="row" style="margin-top:12px"><span class="muted">Successful referrals</span><b id="refCount">0</b></div><button class="primary" style="width:100%;margin-top:15px" id="invite">INVITE FRIENDS</button></div>
+   <div class="panel"><div class="panel-title">How a referral qualifies</div><p class="muted">A new player must join through your unique Telegram link and complete the qualifying activity. Server-side checks will prevent duplicate, self and automated referrals.</p></div>
+  </section>
+  <section class="page" id="missions">
+   <div class="page-title">Daily missions</div><div class="page-sub">Small actions. Steady progress.</div>
+   <div class="panel">
+    <div class="mission"><div class="missionicon">🌱</div><div style="flex:1"><b>Visit your aviary</b><div class="muted">Open the game today</div></div><b style="color:var(--lime)">+10</b></div>
+    <div class="mission"><div class="missionicon">🪶</div><div style="flex:1"><b>Collect points</b><div class="muted">Tap the collection button</div></div><b style="color:var(--lime)">+5</b></div>
+    <div class="mission"><div class="missionicon">👥</div><div style="flex:1"><b>Invite a new keeper</b><div class="muted">Qualified referrals only</div></div><b style="color:var(--lime)">+100</b></div>
+   </div>
+  </section>
+ </main>
+ <p class="disclaimer">BIRDS is a prototype. Points shown here are demo data stored on this device. They are not money, a token, or a promise of future value.</p>
+</div>
+<nav class="nav">
+ <button class="active" data-page="home"><span>⌂</span>HOME</button>
+ <button data-page="birds"><span>🪶</span>BIRDS</button>
+ <button data-page="eggs"><span>🥚</span>HATCH</button>
+ <button data-page="market"><span>▦</span>MARKET</button>
+ <button data-page="friends"><span>♧</span>FRIENDS</button>
+</nav>
+<div class="toast" id="toast"></div>
+<script>
+const tg=window.Telegram?.WebApp;
+if(tg){tg.ready();tg.expand();const user=tg.initDataUnsafe?.user;if(user){document.getElementById('avatar').textContent=(user.first_name||'B').slice(0,1).toUpperCase();}}
+let points=Number(localStorage.getItem('birds_demo_points')||1000);
+let refs=Number(localStorage.getItem('birds_demo_refs')||0);
+const pointEl=document.getElementById('points');
+function render(){pointEl.textContent=points.toLocaleString();document.getElementById('refCount').textContent=refs;}
+function notify(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>el.style.display='none',2100);}
+function changePage(id){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));window.scrollTo({top:0,behavior:'smooth'});}
+document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>changePage(b.dataset.page)));
+document.getElementById('tap').addEventListener('click',()=>{points+=1;localStorage.setItem('birds_demo_points',points);render();tg?.HapticFeedback?.impactOccurred('light');notify('+1 demo point collected');});
+document.getElementById('hatch').addEventListener('click',()=>{if(points<100){notify('You need 100 points to hatch an egg');return;}points-=100;localStorage.setItem('birds_demo_points',points);render();notify('Hatching will be enabled with the secure game server');});
+document.getElementById('invite').addEventListener('click',()=>{if(tg?.openTelegramLink){tg.openTelegramLink('https://t.me/share/url?url=https://t.me/Cas_BirdsFarmBot&text=Join%20me%20in%20BIRDS!');}else{notify('Open BIRDS inside Telegram to share an invite');}});document.getElementById('marketInfo').addEventListener('click',()=>notify('Marketplace unlocks after secure player accounts are ready'));
+render();
+</script>
+</body>
+</html>
