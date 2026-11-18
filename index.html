@@ -155,6 +155,39 @@ document.getElementById('hatch').addEventListener('click',()=>{if(points<100){no
 document.getElementById('invite').addEventListener('click',()=>{if(tg?.openTelegramLink){tg.openTelegramLink('https://t.me/share/url?url=https://t.me/Cas_BirdsFarmBot&text=Join%20me%20in%20BIRDS!');}else{notify('Open BIRDS inside Telegram to share an invite');}});
 document.getElementById('marketInfo').addEventListener('click',()=>notify('Marketplace unlocks after secure player accounts are ready'));
 render();
+ (async function connectBirds() {
+  if (!tg || !tg.initData) {
+    notify("Open BIRDS through Telegram");
+    return;
+  }
+
+  const response = await fetch(
+    "https://fozgkbqcfxxbfujmdziv.supabase.co/functions/v1/quick-api",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": "YOUR_PUBLISHABLE_KEY",
+        "Authorization": "Bearer YOUR_PUBLISHABLE_KEY"
+      },
+      body: JSON.stringify({
+        initData: tg.initData
+      })
+    }
+  );
+
+  const result = await response.json();
+
+  if (result.success) {
+    points = result.player.points;
+    localStorage.setItem("birds_demo_points", points);
+    render();
+    notify("BIRDS account connected!");
+  } else {
+    notify(result.error || "Connection failed");
+    console.error(result);
+  }
+})();
 </script>
 </body>
 </html>
